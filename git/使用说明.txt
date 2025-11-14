@@ -1,0 +1,37 @@
+GitHub提交脚本使用指南
+====================
+
+快速开始
+--------
+1. 打开PowerShell
+2. 进入git目录: cd git
+3. 首次使用执行: .\commit.ps1 -init
+4. 日常提交执行: .\commit.ps1 -message "你的提交信息"
+
+详细说明
+--------
+- 脚本会自动检测Git是否安装
+- 首次使用会自动初始化Git仓库并配置远程地址
+- 脚本会自动添加所有更改的文件
+- 支持自定义提交信息
+
+注意事项
+--------
+1. 确保已安装Git: https://git-scm.com/downloads
+2. 确保已配置GitHub认证:
+   - 使用Personal Access Token (推荐)
+   - 或使用SSH密钥
+3. 如果推送失败，可能需要手动配置认证信息
+
+GitHub认证配置
+--------------
+方式1: 使用Personal Access Token
+  1. GitHub -> Settings -> Developer settings -> Personal access tokens -> Tokens (classic)
+  2. 生成新token，勾选repo权限
+  3. 推送时使用token作为密码
+
+方式2: 使用SSH密钥
+  1. 生成SSH密钥: ssh-keygen -t ed25519 -C "your_email@example.com"
+  2. 将公钥添加到GitHub: Settings -> SSH and GPG keys
+  3. 修改远程地址: git remote set-url origin git@github.com:2921323707/document_report.git
+

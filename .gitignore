@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 临时文件
+*.tmp
+*.log
+*.bak
+*.cache
+
+# 大文件（根据需要取消注释）
+# *.pdf
+# *.zip
+# *.tar.gz
+# *.rar
+
+# 环境变量
+.env
+.env.local
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# 数据文件（根据需要调整）
+# *.csv
+# *.xlsx
+# *.h5
+# *.hdf5
+
