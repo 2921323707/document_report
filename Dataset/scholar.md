@@ -4,15 +4,7 @@
 2. **DEAP dataset** — Koelstra et al., 2012：EEG + peripheral 生理情感数据集（经典情感识别基准）。[电子与计算机工程系](https://www.eecs.qmul.ac.uk/mmv/datasets/deap/?utm_source=chatgpt.com)
 3. **AVDOS-VR (2024)** — Gnacek et al., Sci Data: 第一个带连续自评与生理信号的 VR 视频数据库（PPG、facial-EMG、IMU 等）。非常适合 VR 情感诱发与干预效果评估。[Nature](https://www.nature.com/articles/s41597-024-02953-6?utm_source=chatgpt.com)
 4. **EEVR (NeurIPS Datasets 2024)** — EEVR 数据集，专注 VR 情感诱导与 PPG/EDA 信号，文中讨论了语言+生理多模态预训练的可能性。适合想做多模态深度学习预训练的项目。[NeurIPS 会议录](https://proceedings.neurips.cc/paper_files/paper/2024/file/1cba8502063fab9df252a63968691768-Paper-Datasets_and_Benchmarks_Track.pdf?utm_source=chatgpt.com)
-5. ** 实证研究类论文（可借鉴具体算法与实现）
-** A comparative analysis of machine learning methods for emotion recognition using EEG and peripheral physiological signals（Doma & Pirouz, 2020）利用 EEG + 外周生理信号（如心率等），比较多种机器学习模型在情绪识别任务上的效果。 SpringerOpen
 
-** Emotion Analysis on EEG Signal Using Machine Learning and Neural Network（2023）基于 DEAP 数据集，提取频域特征（DWT 分解） + PCA，然后使用 SVM / KNN / LSTM 等模型，对 valence/arousal 进行识别。 Emergent Mind
-
-** A Real‑Time and Two‑Dimensional Emotion Recognition System Based on EEG and HRV Using Machine Learning（Wei et al., 2023）利用 EEG + HRV，采用 DenseNet 网络进行两维度（valence/arousal）识别。可作为“脑电＋心率”融合的参考。 Waseda Elsevier Pure
-
-** Transformer‑Based Self‑Supervised Learning for Emotion Recognition（Vazquez-Rodriguez et al., 2022）利用 Transformer 架构 + 自监督学习，将 ECG 信号进行预训练，再在情绪识别任务上 fine-tune；展示了较新的“预训练 + Transformer”方向。 
-arXiv
 ------
 
 ### VR 与 HRV / 干预效果相关实证研究（表明 VR 干预会改变 HRV 等指标）
