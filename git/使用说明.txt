@@ -1,8 +1,8 @@
-GitHub提交脚本使用指南
+Git提交使用指南
 ====================
 
-快速开始
---------
+一、使用提交脚本（推荐）
+--------------------
 1. 打开PowerShell
 2. 进入git目录: cd git
 3. 首次使用执行: .\commit.ps1 -init
@@ -14,24 +14,160 @@ GitHub提交脚本使用指南
 - 首次使用会自动初始化Git仓库并配置远程地址
 - 脚本会自动添加所有更改的文件
 - 支持自定义提交信息
+- 自动拉取远程更改并合并（避免推送冲突）
+
+二、手动Git提交步骤（详细）
+--------------------
+
+步骤1: 检查当前状态
+--------
+git status                    # 查看当前工作区状态
+git status --short            # 简短显示状态
+
+步骤2: 查看更改内容
+--------
+git diff                      # 查看未暂存的更改
+git diff --staged             # 查看已暂存的更改
+git log --oneline -5          # 查看最近5条提交记录
+
+步骤3: 添加文件到暂存区
+--------
+git add .                     # 添加所有更改的文件
+git add <文件名>              # 添加指定文件
+git add <目录/>               # 添加指定目录下的所有文件
+
+示例:
+git add Frame/reference.md    # 添加单个文件
+git add Frame/src/            # 添加整个目录
+
+步骤4: 提交更改
+--------
+git commit -m "提交信息"      # 创建提交记录
+
+提交信息示例:
+git commit -m "2025/11/16 更新reference文档"
+git commit -m "添加新的数据集说明"
+git commit -m "修复子模块问题"
+
+步骤5: 推送到远程仓库
+--------
+
+5.1 首次推送（设置上游分支）
+git push -u origin main       # main是默认分支名
+
+5.2 日常推送
+git push                      # 直接推送（如果已设置上游分支）
+
+5.3 如果远程有更新（推送前先拉取）
+git pull origin main          # 拉取并合并远程更改
+git push                      # 然后再推送
+
+或者使用rebase方式（保持提交历史线性）:
+git pull --rebase origin main
+git push
+
+步骤6: 查看推送结果
+--------
+git status                    # 确认工作区是干净的
+git log --oneline -3          # 查看最近的提交
+git remote -v                 # 查看远程仓库地址
+
+完整示例流程
+----------
+# 1. 进入项目根目录
+cd C:\Users\29213\Desktop\数据调研
+
+# 2. 查看状态
+git status
+
+# 3. 添加所有更改
+git add .
+
+# 4. 提交更改
+git commit -m "2025/11/16 更新项目内容"
+
+# 5. 拉取远程更改（如果有）
+git pull origin main
+
+# 6. 推送到远程
+git push origin main
+
+# 7. 确认推送成功
+git status
+
+处理特殊情况
+----------
+
+1. 如果有冲突
+git pull origin main          # 拉取时如果有冲突
+# 手动解决冲突后
+git add .
+git commit -m "解决合并冲突"
+git push
+
+2. 撤销暂存的文件
+git restore --staged <文件>   # 取消暂存，保留更改
+git restore <文件>            # 撤销文件更改（危险！）
+
+3. 修改最后一次提交信息
+git commit --amend -m "新的提交信息"
+
+4. 查看远程分支
+git branch -r                 # 查看远程分支
+git fetch origin              # 获取远程更新（不合并）
+git branch -a                 # 查看所有分支（本地+远程）
+
+三、GitHub认证配置
+--------------
+
+方式1: 使用Personal Access Token（推荐）
+  1. 访问: GitHub -> Settings -> Developer settings -> Personal access tokens -> Tokens (classic)
+  2. 点击 "Generate new token (classic)"
+  3. 设置名称，勾选 repo 权限
+  4. 生成后复制token（只显示一次）
+  5. 推送时，用户名填GitHub用户名，密码填token
+
+方式2: 使用SSH密钥
+  1. 生成SSH密钥:
+     ssh-keygen -t ed25519 -C "your_email@example.com"
+  2. 复制公钥内容:
+     cat ~/.ssh/id_ed25519.pub
+  3. 添加到GitHub: Settings -> SSH and GPG keys -> New SSH key
+  4. 修改远程地址为SSH:
+     git remote set-url origin git@github.com:2921323707/document_report.git
+
+四、常用命令速查
+--------------
+
+查看信息:
+  git status                  # 查看工作区状态
+  git log --oneline -10       # 查看提交历史
+  git remote -v               # 查看远程仓库
+  git branch                  # 查看分支
+
+文件操作:
+  git add .                   # 添加所有文件
+  git add <文件>              # 添加指定文件
+  git restore <文件>          # 撤销文件更改
+
+提交操作:
+  git commit -m "消息"        # 提交更改
+  git commit --amend          # 修改最后一次提交
+  git push                    # 推送到远程
+  git pull                    # 拉取远程更改
+
+分支操作:
+  git branch                  # 列出分支
+  git checkout <分支>         # 切换分支
+  git checkout -b <新分支>    # 创建并切换分支
 
 注意事项
 --------
 1. 确保已安装Git: https://git-scm.com/downloads
-2. 确保已配置GitHub认证:
-   - 使用Personal Access Token (推荐)
-   - 或使用SSH密钥
-3. 如果推送失败，可能需要手动配置认证信息
-
-GitHub认证配置
---------------
-方式1: 使用Personal Access Token
-  1. GitHub -> Settings -> Developer settings -> Personal access tokens -> Tokens (classic)
-  2. 生成新token，勾选repo权限
-  3. 推送时使用token作为密码
-
-方式2: 使用SSH密钥
-  1. 生成SSH密钥: ssh-keygen -t ed25519 -C "your_email@example.com"
-  2. 将公钥添加到GitHub: Settings -> SSH and GPG keys
-  3. 修改远程地址: git remote set-url origin git@github.com:2921323707/document_report.git
+2. 首次使用前配置Git用户信息:
+   git config --global user.name "你的名字"
+   git config --global user.email "你的邮箱"
+3. 推送前先检查状态: git status
+4. 如果推送被拒绝，先执行 git pull 再推送
+5. 大文件（>100MB）需要使用Git LFS或不上传到仓库
 
