@@ -153,9 +153,39 @@ if (-not $branch) {
     git branch -M main
 }
 
+# 检查远程是否有新提交，如果有则先拉取
+Write-Host "正在检查远程仓库更新..." -ForegroundColor Yellow
+git fetch origin $branch 2>&1 | Out-Null
+$localCommit = git rev-parse HEAD
+$remoteCommit = git rev-parse "origin/$branch" 2>$null
+
+if ($remoteCommit -and $localCommit -ne $remoteCommit) {
+    $commonAncestor = git merge-base HEAD "origin/$branch" 2>$null
+    $isBehind = git rev-list --count "$commonAncestor..origin/$branch" 2>$null
+    
+    if ($isBehind -gt 0) {
+        Write-Host "检测到远程有新提交，正在拉取并合并..." -ForegroundColor Yellow
+        git pull origin $branch --no-rebase 2>&1 | ForEach-Object {
+            if ($_ -match "error|fatal|CONFLICT") {
+                Write-Host $_ -ForegroundColor Red
+            } else {
+                Write-Host $_ -ForegroundColor Gray
+            }
+        }
+        
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "✗ 拉取失败，可能存在冲突，请手动解决后重试" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "✓ 远程更改已合并" -ForegroundColor Green
+        Write-Host ""
+    }
+}
+
 # 尝试推送
+Write-Host "正在推送本地提交..." -ForegroundColor Yellow
 git push -u origin $branch 2>&1 | ForEach-Object {
-    if ($_ -match "error|fatal") {
+    if ($_ -match "error|fatal|rejected") {
         Write-Host $_ -ForegroundColor Red
     } else {
         Write-Host $_ -ForegroundColor Gray
@@ -170,11 +200,12 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "仓库地址: https://github.com/2921323707/document_report" -ForegroundColor Cyan
 } else {
     Write-Host ""
-    Write-Host "⚠ 推送可能失败，可能的原因:" -ForegroundColor Yellow
+    Write-Host "⚠ 推送失败，可能的原因:" -ForegroundColor Yellow
     Write-Host "  1. 需要配置GitHub认证（使用Personal Access Token或SSH）" -ForegroundColor Yellow
     Write-Host "  2. 网络连接问题" -ForegroundColor Yellow
     Write-Host "  3. 权限问题" -ForegroundColor Yellow
+    Write-Host "  4. 存在冲突需要手动解决" -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "提示: 可以手动执行 'git push -u origin $branch' 来推送" -ForegroundColor Gray
+    Write-Host "提示: 可以手动执行 'git pull origin $branch' 和 'git push -u origin $branch' 来解决" -ForegroundColor Gray
 }
 
