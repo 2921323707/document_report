@@ -172,13 +172,35 @@ if ($remoteCommit -and $localCommit -ne $remoteCommit) {
                 Write-Host $_ -ForegroundColor Gray
             }
         }
-        
+
+        # 若发生冲突，自动对 .ipynb 选择 ours 并完成合并
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "✗ 拉取失败，可能存在冲突，请手动解决后重试" -ForegroundColor Red
-            exit 1
+            $conflictFiles = git diff --name-only --diff-filter=U 2>$null
+            $ipynbConflicts = @()
+            if ($conflictFiles) {
+                $ipynbConflicts = $conflictFiles | Where-Object { $_ -like "*.ipynb" }
+            }
+
+            if ($ipynbConflicts -and $ipynbConflicts.Count -gt 0) {
+                Write-Host "检测到 .ipynb 冲突，自动选择本地版本（ours）..." -ForegroundColor Yellow
+                foreach ($f in $ipynbConflicts) {
+                    git checkout --ours -- "$f" | Out-Null
+                    git add -- "$f" | Out-Null
+                }
+                # 如果处于合并状态则提交合并
+                if (Test-Path ".git/MERGE_HEAD") {
+                    git commit -m "自动解决 .ipynb 冲突（选择本地 ours）" | Out-Null
+                    Write-Host "✓ 已自动提交合并" -ForegroundColor Green
+                }
+                Write-Host "✓ .ipynb 冲突已自动处理" -ForegroundColor Green
+            } else {
+                Write-Host "✗ 拉取产生冲突且非 .ipynb 文件，需手动解决" -ForegroundColor Red
+                exit 1
+            }
+        } else {
+            Write-Host "✓ 远程更改已合并" -ForegroundColor Green
+            Write-Host ""
         }
-        Write-Host "✓ 远程更改已合并" -ForegroundColor Green
-        Write-Host ""
     }
 }
 
@@ -199,13 +221,65 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "仓库地址: https://github.com/2921323707/document_report" -ForegroundColor Cyan
 } else {
-    Write-Host ""
-    Write-Host "⚠ 推送失败，可能的原因:" -ForegroundColor Yellow
-    Write-Host "  1. 需要配置GitHub认证（使用Personal Access Token或SSH）" -ForegroundColor Yellow
-    Write-Host "  2. 网络连接问题" -ForegroundColor Yellow
-    Write-Host "  3. 权限问题" -ForegroundColor Yellow
-    Write-Host "  4. 存在冲突需要手动解决" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "提示: 可以手动执行 'git pull origin $branch' 和 'git push -u origin $branch' 来解决" -ForegroundColor Gray
+    # 若因非快进被拒绝，尝试使用 rebase 并自动解决 .ipynb 冲突（选择 ours）后再次推送
+    Write-Host "推送被拒绝，尝试拉取并使用 rebase 集成远端更新..." -ForegroundColor Yellow
+    git fetch origin $branch | Out-Null
+    git pull --rebase origin $branch 2>&1 | ForEach-Object {
+        if ($_ -match "error|fatal|CONFLICT") {
+            Write-Host $_ -ForegroundColor Red
+        } else {
+            Write-Host $_ -ForegroundColor Gray
+        }
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        # 在 rebase 过程中循环处理 .ipynb 冲突为 ours 并继续
+        while (Test-Path ".git/rebase-merge" -or Test-Path ".git/rebase-apply") {
+            $conflictFiles = git diff --name-only --diff-filter=U 2>$null
+            $ipynbConflicts = @()
+            if ($conflictFiles) {
+                $ipynbConflicts = $conflictFiles | Where-Object { $_ -like "*.ipynb" }
+            }
+            if ($ipynbConflicts -and $ipynbConflicts.Count -gt 0) {
+                Write-Host "rebase 冲突：自动选择 .ipynb 的本地版本（ours）..." -ForegroundColor Yellow
+                foreach ($f in $ipynbConflicts) {
+                    git checkout --ours -- "$f" | Out-Null
+                    git add -- "$f" | Out-Null
+                }
+                git rebase --continue | Out-Null
+            } else {
+                Write-Host "✗ rebase 冲突非 .ipynb 文件，请手动解决" -ForegroundColor Red
+                git rebase --abort | Out-Null
+                break
+            }
+        }
+    }
+
+    # rebase 完成后再次尝试推送
+    Write-Host "再次推送到远端..." -ForegroundColor Yellow
+    git push -u origin $branch 2>&1 | ForEach-Object {
+        if ($_ -match "error|fatal|rejected") {
+            Write-Host $_ -ForegroundColor Red
+        } else {
+            Write-Host $_ -ForegroundColor Gray
+        }
+    }
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Green
+        Write-Host "✓ 提交成功！" -ForegroundColor Green
+        Write-Host "========================================" -ForegroundColor Green
+        Write-Host "仓库地址: https://github.com/2921323707/document_report" -ForegroundColor Cyan
+    } else {
+        Write-Host ""
+        Write-Host "⚠ 推送失败，可能的原因:" -ForegroundColor Yellow
+        Write-Host "  1. 需要配置GitHub认证（使用Personal Access Token或SSH）" -ForegroundColor Yellow
+        Write-Host "  2. 网络连接问题" -ForegroundColor Yellow
+        Write-Host "  3. 权限问题" -ForegroundColor Yellow
+        Write-Host "  4. 存在冲突需要手动解决" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "提示: 可以手动执行 'git pull --rebase origin $branch' 和 'git push -u origin $branch' 来解决" -ForegroundColor Gray
+    }
 }
 
